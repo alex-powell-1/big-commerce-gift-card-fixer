@@ -6,7 +6,10 @@ Big Commerce Gift Card Fixer
 Author: Alex Powell
 Written: January 3, 2024
 Summary: Takes gift card code and changes gift card recipient email address. Helpful when users
-accidentally enter the wrong email address for recipients 
+accidentally enter the wrong email address for recipients
+Changes: Version 2: 
+-Added else statement for invalid gift cards
+-Added recursion to run function again if try again is needed 
 """
 client_id = creds.client_id
 access_token = creds.access_token
