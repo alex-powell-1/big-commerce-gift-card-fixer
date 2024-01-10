@@ -33,7 +33,9 @@ def find_specific_gift_card(gift_cards, gift_card_code):
             from_name = x['from_name']
             from_email = x['from_email']
             amount = x['amount']
-    return id, to_name, to_email, from_name, from_email, amount
+            return id, to_name, to_email, from_name, from_email, amount
+    return "No such gift card"
+
 
 def fix_gift_card(gift_card, email):
     fix_id = gift_card[0]
@@ -60,9 +62,13 @@ def gift_card_fixer():
     id = input("What is the code? ")
     fixed_email = input("What is the correct email address? ")
     gift_card_to_fix = find_specific_gift_card(get_gift_cards(), id)
-    old_email = gift_card_to_fix[2]
-    fix_gift_card(gift_card_to_fix, fixed_email)
-    return f"Done: {old_email} changed to {fixed_email} for gift card: {id}"
+    if not gift_card_to_fix == "No such gift card":
+        old_email = gift_card_to_fix[2]
+        fix_gift_card(gift_card_to_fix, fixed_email)
+        return f"Done: {old_email} changed to {fixed_email} for gift card: {id}"
+    else:
+        print("No such gift card. Try again.")
+        gift_card_fixer()
 
 
 print(gift_card_fixer())
