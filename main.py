@@ -9,14 +9,18 @@ Summary: Takes gift card code and changes gift card recipient email address. Hel
 accidentally enter the wrong email address for recipients
 Changes: Version 2: 
 -Added else statement for invalid gift cards
--Added recursion to run function again if try again is needed 
+-Added recursion to run function again if try again is needed
+
+Changes: Version 3:
+-Added while loop to traverse pages for lists of gift cards over 250 in size.  
 """
 client_id = creds.client_id
 access_token = creds.access_token
 store_hash = creds.store_hash
 
-def get_gift_cards():
-    url = f" https://api.bigcommerce.com/stores/{store_hash}/v2/gift_certificates"
+
+def get_gift_cards(page):
+    url = f" https://api.bigcommerce.com/stores/{store_hash}/v2/gift_certificates?page={page}&limit=250"
     headers = {
         'X-Auth-Token': access_token,
         'Content-Type': 'application/json',
@@ -24,20 +28,32 @@ def get_gift_cards():
     }
 
     response = requests.get(url, headers=headers)
-    gift_cards = response.json()
-    return gift_cards
+    try:
+        gift_cards = response.json()
+    except requests.exceptions.JSONDecodeError:
+        return
+    else:
+        return gift_cards
 
-def find_specific_gift_card(gift_cards, gift_card_code):
-    for x in gift_cards:
-        if x['code'] == gift_card_code:
-            id = x['id']
-            to_name = x['to_name']
-            to_email = x['to_email']
-            from_name = x['from_name']
-            from_email = x['from_email']
-            amount = x['amount']
-            return id, to_name, to_email, from_name, from_email, amount
-    return "No such gift card"
+
+def find_specific_gift_card(gift_card_code):
+    page = 1
+    has_more_pages = True
+    while has_more_pages:
+        gift_cards = get_gift_cards(page)
+        if gift_cards is not None:
+            for x in gift_cards:
+                if x['code'] == gift_card_code:
+                    id = x['id']
+                    to_name = x['to_name']
+                    to_email = x['to_email']
+                    from_name = x['from_name']
+                    from_email = x['from_email']
+                    amount = x['amount']
+                    return id, to_name, to_email, from_name, from_email, amount
+            page += 1
+        else:
+            has_more_pages = False
 
 
 def fix_gift_card(gift_card, email):
@@ -62,16 +78,18 @@ def fix_gift_card(gift_card, email):
 
 
 def gift_card_fixer():
-    id = input("What is the code? ")
-    fixed_email = input("What is the correct email address? ")
-    gift_card_to_fix = find_specific_gift_card(get_gift_cards(), id)
-    if not gift_card_to_fix == "No such gift card":
-        old_email = gift_card_to_fix[2]
-        fix_gift_card(gift_card_to_fix, fixed_email)
-        return f"Done: {old_email} changed to {fixed_email} for gift card: {id}"
+    gc_id = input("What is the code? ")
+    index = 1
+    gift_card_to_fix = find_specific_gift_card(gc_id)
+    if gift_card_to_fix is not None:
+        fixed_email = input("What is the correct email address? ")
+        if not gift_card_to_fix == "No such gift card":
+            old_email = gift_card_to_fix[2]
+            fix_gift_card(gift_card_to_fix, fixed_email)
+            return f"Done: {old_email} changed to {fixed_email} for gift card: {gc_id}"
     else:
         print("No such gift card. Try again.")
-        gift_card_fixer()
+        return gift_card_fixer()
 
 
 print(gift_card_fixer())
